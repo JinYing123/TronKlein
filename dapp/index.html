@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>TRON KLEIN</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <link rel="stylesheet" href='./css/style.css?v=2'>
+    <script src="./js/jquery.js"></script>
+    <script src="./js/language.js?v=8"></script>
+    <script src="./js/vue.js"></script>
+    <script src="./js/number_animation.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
+    <script>
+        var countdown;
+        var countdown_interval;
+        var vm;
+        var iscvip=false;
+        var hasamount=false;
+        //var contract_address="TGRsk8yPpyk7Uz65DUxbUdm8fmh8uy7TDp";
+        var contract_address="TV74eg1YBWKN4JiUJYfnTyv1KKZKhGY7aW";
+        $(function() {
+            var html = document.documentElement;
+            var hWidth = html.getBoundingClientRect().width;
+            html.style.fontSize = hWidth / 15 + "px";
+
+             
+            var _local_active = localStorage.getItem('local_active' );
+
+            if(_local_active == null){
+                _local_active = 0;
+            }
+            if(_local_active>1){
+                _local_active=0;
+            }
+
+            vm = new Vue({
+                "el": ".wrap",
+                "data": { 
+                    //'join_menu':['100', '1000', '10000', '30000', '50000', '100000'],
+                    'join_menu':[
+                        {
+                            'value':'1000',
+                            'des': '1k'
+                        },
+                        {
+                            'value':'10000',
+                            'des': '10k'
+                        },
+                        {
+                            'value':'30000',
+                            'des': '30k'
+                        },
+                        {
+                            'value':'50000',
+                            'des': '50k'
+                        },
+                        {
+                            'value':'100000',
+                            'des': '100k'
+                        },
+                    ],
+                    'locals': _locals, 
+                    'data':{  
+                        'local_active':_local_active,
+                        'errorstr':'',
+                        'input_num': '0',
+                        'list':[[0,0,0,0,0],[0],[0,0,0,0,0,0,0,0]],
+                        'burnAmount':0,
+                        'recommend_addr':'',
+                        'top5_1': [['', '0'],['', '0'],['', '0'],['', '0'],['', '0']],
+                        'top5_7': [['', '0'],['', '0'],['', '0'],['', '0'],['', '0']],
+                    }
+                },
+                'computed':{
+                     language (){
+                        return lan[this.data.local_active];
+                    }
+                },
+                "methods":{
+                    setInput(n){
+                        Vue.set(vm.data, 'input_num', Number(vm.data.input_num)+Number(n))
+                    } ,
+                    getIcon(name){
+                        return './images/'+name+ '.png';
+                    },
+                    choose_lang(index){
+
+                        Vue.set(vm.data, 'local_active', index);
+                        Vue.set(vm.data, 'language', lan[index]);
+                        $('.frame_lan').hide();
+                        localStorage.setItem('local_active', index);
+                    },
+
+                    onMenu(index, item){
+                        console.log(index, item);
+
+                        if(index == 0 || index == 2){
+                            $('#frame_info .title').html(item);
+                            $('#frame_info .detail').html(this.language['menu_detail'][index]);
+                            $('#frame_info').show();
+                        }else if(index==1){
+                            $('#frame_info_top5_1').show();
+                        }
+                        else if(index==3){
+                            $('#frame_info_top5_7').show();
+                        }
+                    },
+                    sponsor_edit(){
+                        console.log('edit');
+                    },
+                    sponsor_join(){
+                        join();
+                    },
+                    toBeCVip(){ 
+                        cvip();
+                    },
+
+                    getImg(imgName) {
+                        return './images/language/' + _locals[this.data.local_active]['value']+ '/' + imgName;
+                    },
+
+
+
+                    withdraw(){
+                        withdraw();
+                    },
+                    copy(){
+                    },
+                    again(){
+                        redeposit();
+                    },
+                    release(){
+                        relese();
+                    }
+                }
+
+            })
+
+            var obj = setInterval(async ()=>{
+                if (window.tronWeb && window.tronWeb.defaultAddress.base58) {
+                    clearInterval(obj)
+                    getMyInfo();
+                    getGlobalInfo();
+                    getTop1();
+                    getTop7();
+                    $("#fooaddress").val("http://"+document.domain+"/?u="+window.tronWeb.defaultAddress.base58);
+                }
+            }, 10);
+            var clipboard = new ClipboardJS('.copybtn');
+            clipboard.on('success', function(e) {
+                showSuccess();
+                e.clearSelection();
+            });
+        })
+
+
+        function setList(index, arr){
+
+            Vue.set(vm.data['list'], index, arr);
+        }
+
+
+        function numberAni(num){
+            $("#number").numberAnimate({
+                num: num,
+                speed: 3000,
+                symbol: ","
+            });
+        }
+
+
+        function showSuccess(){
+            $('#frame_success').fadeIn();
+            setTimeout(function(){
+                $('#frame_success').fadeOut();
+            }, 1500);
+        }
+        function showError(txt){
+            Vue.set(vm.data,"errorstr", txt);
+            $('#frame_error').fadeIn();
+            setTimeout(function(){
+                $('#frame_error').fadeOut();
+            }, 1500);
+        }
+
+        function gettronweb(){
+            if(window.tronWeb && window.tronWeb.defaultAddress.base58){
+                document.write("Yes, catch it:",window.tronWeb.defaultAddress.base58)
+            }
+        }
+        async function redeposit(){
+            try {
+                let contract = await window.tronWeb.contract().at(contract_address);
+                let result = await contract.redeposit().send({
+                    feeLimit:100000000,
+                    shouldPollResponse:true
+                });
+                showSuccess();
+            }
+            catch (error) {
+                showError(error.message);
+                console.log(error);
+            }
+
+        }
+        async function relese(){
+            try {
+                let contract = await window.tronWeb.contract().at(contract_address);
+                let result = await contract.release_diary_self().send({
+                    feeLimit:100000000,
+                    shouldPollResponse:true
+                });
+                showSuccess();
+            }
+            catch (error) {
+                showError(error.message);
+                console.log(error);
+            }
+
+        }
+        async function withdraw(){
+            try {
+                let contract = await window.tronWeb.contract().at(contract_address);
+                let result = await contract.withdraw().send({
+                    feeLimit:100000000,
+                    shouldPollResponse:true
+                });
+                showSuccess();
+            }
+            catch (error) {
+                showError(error.message);
+                console.log(error);
+            }
+
+        }
+        async function getMyInfo(){
+            if(getQueryVariable("u")==undefined){
+                Vue.set(vm.data, 'recommend_addr', "");
+            }
+            else{
+                Vue.set(vm.data, 'recommend_addr', getQueryVariable("u"));
+            }
+            let instance = await window.tronWeb.contract().at(contract_address);
+            let res = await instance.myinfo().call();
+            console.log(res);
+            if(h(res.is_cvip)==1){
+                iscvip=true;
+                if(h(res.cvip_num)>=128){
+                    $(".cvip_detal").html('CVIP-8');
+                }
+                else if(h(res.cvip_num)>=64){
+                    $(".cvip_detal").html('CVIP-7');
+                }
+                else if(h(res.cvip_num)>=32){
+                    $(".cvip_detal").html('CVIP-6');
+                }
+                else if(h(res.cvip_num)>=16){
+                    $(".cvip_detal").html('CVIP-5');
+                }
+                else if(h(res.cvip_num)>=8){
+                    $(".cvip_detal").html('CVIP-4');
+                }
+                else if(h(res.cvip_num)>=4){
+                    $(".cvip_detal").html('CVIP-3');
+                }
+                else if(h(res.cvip_num)>=2){
+                    $(".cvip_detal").html('CVIP-2');
+                }
+                else {
+                    $(".cvip_detal").html('CVIP-1');
+                }
+                $(".btn_tobe").hide();
+            }
+            Vue.set(vm.data, 'burnAmount', hs(res.burn_amount));
+            if(hs(res.amount)!=0){
+                hasamount=true;
+                //$(".join").hide();
+                //$(".joinpart").hide();
+            }
+
+            //myinfo
+            var lastts=h(res.last_ts);
+            var lastdays=h(res.last_days);
+            //var lastts=1612580730;
+            //var lastdays=0;
+            var now = parseInt(new Date().getTime()/1000);
+            var dayspassed = (now-lastts)/(24*3600)-lastdays;
+
+            var countdown_view;
+            if(lastts==0){
+                countdown=-1;
+                countdown_view=0;
+                $("#releasebtn").hide();
+            }
+            else if(dayspassed>1){
+                countdown=0;
+                countdown_view=0;
+                $("#releasebtn").show();
+            }
+            else{
+                $("#releasebtn").hide();
+                countdown=(1-dayspassed)*24*3600;
+            }
+            if(countdown!=0 && countdown!=-1){
+                countdown_view=sec2view(countdown);
+                countdown_interval=setInterval(function(){update_countdown();},1000);
+            }
+            setList(2, [address(res.addr),countdown_view, hs(res.amount), hs(res.prepare_balance),
+                hs(res.released_amount), hs(res.total_released), h(res.recommend_num), hs(res.wait_award) , h(res.cvip_num),0,0]);
+            getTeamInfo();
+
+        }
+        function getTeamInfo(){
+            //var addr=tronWeb.address.toHex(window.tronWeb.defaultAddress.base58);
+            var addr=tronWeb.address.toHex('TXY2PYcjiaE6wgtqvXZdtrv3mQius3F1sL');
+            addr='0x'+addr.substr(2);
+            $.get('tron/teaminfo.php?address='+addr+'&output=json',function(obj){
+                Vue.set(vm.data['list'][2], 9, obj.num);
+                Vue.set(vm.data['list'][2], 10, obj.amount);
+            },'json');
+        }
+        function update_countdown(){
+            if(countdown>0){
+                countdown--;
+                Vue.set(vm.data['list'][2], 1, sec2view(countdown));
+            }
+            else{
+                clearInterval(countdown_interval);
+                Vue.set(vm.data['list'][2], 1, 0);
+                $("#releasebtn").show();
+            }
+        }
+        function sec2view(result){
+            var h = Math.floor(result / 3600) < 10 ? '0'+Math.floor(result / 3600) : Math.floor(result / 3600);
+            var m = Math.floor((result / 60 % 60)) < 10 ? '0' + Math.floor((result / 60 % 60)) : Math.floor((result / 60 % 60));
+            var s = Math.floor((result % 60)) < 10 ? '0' + Math.floor((result % 60)) : Math.floor((result % 60));
+            return result = h + ":" + m + ":" + s;
+        }
+        async function join(){
+            $(".btn_join").hide();
+            $("#wait").show();
+            try {
+                let contract = await window.tronWeb.contract().at(contract_address);
+
+                var recommend_address;
+                if (getQueryVariable("u") == undefined) {
+                    recommend_address = '0x0000000000000000000000000000000000000000';
+                }
+                else {
+                    recommend_address = window.tronWeb.address.toHex(getQueryVariable("u"));
+                }
+                var val = vm.data.input_num;
+                console.log(recommend_address);
+                let result = await contract.deposit(recommend_address).send({
+                    callValue: window.tronWeb.toSun(val),
+                    shouldPollResponse: true,
+                    feeLimit:200000000
+                })
+                console.log(result);
+                showSuccess();
+                getMyInfo();
+            }
+            catch (error) {
+                showError(error.message);
+                $(".frame2").hide();
+                console.log(error);
+                getMyInfo();
+            }
+        }
+        async function cvip(){
+            if(iscvip){
+                return;
+            }
+            //console.log(tp.isConnected());
+            try {
+                let contract = await window.tronWeb.contract().at(contract_address);
+                var val=500;
+                let result = await contract.cvip().send({
+                    callValue:window.tronWeb.toSun(val),
+                    shouldPollResponse:true,
+                    feeLimit:1000000000
+                });
+                showSuccess();
+                console.log("cvip success",result);
+                getMyInfo();
+            }
+            catch (error) {
+                var msg=error.message;
+                if(msg==""){
+                    msg="Error";
+                }
+                showError(error.message);
+                console.log(error);
+                getMyInfo();
+            }
+
+        }
+        async function getTop1(){
+            let instance = await window.tronWeb.contract().at(contract_address);
+            var top_data=[];
+            try {
+                let top0 = await instance.sortedArrayTopDay(0).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+            try {
+                let top0 = await instance.sortedArrayTopDay(1).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+            try {
+                let top0 = await instance.sortedArrayTopDay(2).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+            try {
+                let top0 = await instance.sortedArrayTopDay(3).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+            try {
+                let top0 = await instance.sortedArrayTopDay(4).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+            Vue.set(vm.data,"top5_1", top_data);
+        }
+        async function getTop7(){
+            let instance = await window.tronWeb.contract().at(contract_address);
+            var top_data=[];
+            try {
+                let top0 = await instance.sortedArrayTopWeek(0).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+            try {
+                let top0 = await instance.sortedArrayTopWeek(1).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+            try {
+                let top0 = await instance.sortedArrayTopWeek(2).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+            try {
+                let top0 = await instance.sortedArrayTopWeek(3).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+            try {
+                let top0 = await instance.sortedArrayTopWeek(4).call();
+                top_data.push([address(top0.addr),hs(top0.value)]);
+            }
+            catch (error) {}
+
+
+
+            Vue.set(vm.data,"top5_7", top_data);
+        }
+        async function getGlobalInfo(){
+            let instance = await window.tronWeb.contract().at(contract_address);
+            let res = await instance.globalinfo().call();
+            console.log(res);
+            numberAni(hs(res._total_balance));
+            //glboal info
+            setList(0, [contract_address, hs(res._history_top_balance), hs(res._total_balance), hs(res._top_award_balance_1), hs(res._top_award_balance_7)],h(res._total_address));
+            //insure info
+            setList(1, [hs(res._insure_balance)]);
+        }
+        function getQueryVariable(variable)
+        {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i=0;i<vars.length;i++) {
+                var pair = vars[i].split("=");
+                if(pair[0] == variable){return pair[1];}
+            }
+            return undefined;
+        }
+        function address(hex){
+            if(hex=='410000000000000000000000000000000000000000'){
+                return "";
+            }
+            else{
+                return window.tronWeb.address.fromHex(hex);
+            }
+        }
+        function h(field){
+            return window.tronWeb.toDecimal(field._hex);
+        }
+        function hs(field){
+            return window.tronWeb.fromSun(window.tronWeb.toDecimal(field._hex));
+        }
+        function showJoin(){
+            if(hasamount){
+                //return;
+            }
+            $('.frame2').show();
+            $(".btn_join").show();
+            $("#wait").hide();
+        }
+    </script>
+</head>
+
+<body>
+    <div class="wrap" v-cloak>
+        <img src="./images/logo.png" alt="" class="logo">
+        <img src="./images/title.png" alt="" class="title">
+        <p class="p_title">{{language['title']}}</p>
+        <div class="amount">
+            <span id='number'></span><i class="icon">TRX</i>
+        </div>
+        <ul class="menu">
+            <li v-for='(item, index) in language["menu"]'><a href="javascript:void(0)" @click='onMenu(index, item)'>{{item}}</a></li>
+        </ul>
+
+        <div class="part">{{language['part_1']['cvip']}}</div>
+
+        <p class="cvip_detal">{{language['part_1']['cvip_detal']}}</p>
+
+        <a href="javascript:void(0)" class="btn_tobe" @click="toBeCVip()">{{language['part_1']['to_be']}}</a>
+
+        <div class="income">
+            <img :src="getImg('zheng.png')" alt="" class="img_income">
+            <div>{{language['part_1']['income']}}</div>
+            <p>{{data.burnAmount}}TRX</p>
+
+        </div>
+        <div class="part joinpart">{{language['part_1']['title']}}</div>
+        <div class="join">
+            <div class="input_wrap">
+                <input type="tel" v-model='data.input_num' oninput="value=value.replace(/[^\d]/g,'')">
+                <span>TRX</span>
+            </div>
+            <ul class="ul_join">
+                <li v-for="(item, index) in join_menu" @click='setInput(item["value"])'>
+                    +{{item['des']}} TRX
+                </li>
+            </ul>
+            <div class="btns">
+                <a href="javascript:void(0)" class="btn_cancel" @click="setInput('0')">{{language['part_1']['cancel']}}</a>
+                <a href="javascript:void(0)" class="btn_join" onclick="showJoin()">{{language['part_1']['join']}}</a>
+            </div>
+        </div>
+        <div class="part">{{language['part_2']['title']}}</div>
+        <ul class="list" v-if='data.list.length != 0'>
+            <li class="item" v-for="(item, index) in language['part_2']['content']">
+                <div class="top"></div>
+                <div class="middle"></div>
+                <div class="bottom"></div>
+                <dl>
+                    <dt>{{item['title']}}</dt>
+                    <dd v-for="(item1,index1) in item['data']"><span>{{item1}}</span><span>{{data.list[index][index1]}}</span>
+                        <a  v-if='index == 2 && index1==4' class="again" href="javascript:void(0)" @click='again'>{{language['part_2']['btns'][0]}}</a>
+                        <a  v-if='index == 2 && index1==1' id='releasebtn' class="again" href="javascript:void(0)" @click='release'>{{language['part_2']['btns'][3]}}</a>
+                        <!-- <span v-else></span> -->
+                    </dd>
+                </dl>
+            </li>
+        </ul>
+
+
+        <div class="pbtns">
+            <a href="javascript:void(0)" @click='withdraw'>{{language['part_2']['btns'][1]}}</a>
+            <a href="javascript:void(0)" class="copybtn" data-clipboard-target="#fooaddress">{{language['part_2']['btns'][2]}}</a>
+        </div>
+        <div>
+            <input id="fooaddress" value="" style="border:0;background:transparent;color:white">
+        </div>
+
+       <div class="lan_switch" onclick="$('.frame_lan').show();">
+            <span>{{language['sys']}}</span>
+            <img :src="getIcon(locals[data.local_active]['value'])" alt="" class="img">
+            <span>{{locals[data.local_active]['name']}}</span>
+            <img src="./images/more.png" alt="" class="more">
+        </div> 
+
+        <ul class="frame_lan" style="display: none;">
+            <li v-for='(item, index) in locals' :class='{active: data.local_active == index}' @click='choose_lang(index)'>
+                <img :src="getIcon(item['value'])" alt=""><span>{{item['name']}}</span>
+            </li>
+        </ul>
+
+
+        <div class="frame" style="display: none;">
+            <div class="black"></div>
+            <div class="content">
+                <div class="info">{{language['first_tip']}}</div>
+                <p class="btn" onclick="$('.frame').hide();">
+                    <a href="javascript:void(0)">OK</a>
+                </p>
+            </div>
+        </div>
+
+
+        <div class="frame2" style="display: none;">
+            <div class="black"></div>
+            <div class="content">
+                <p class="title2">{{language['part_1']['sponsor']}}</p> 
+                 <p class="info">{{data.recommend_addr}}</p>
+                 <a href="javascript:void(0)" class="btn_join"  @click='sponsor_join()'>{{language['part_1']['join']}}</a>
+                <p class="tip" style="display:none" id="wait" v-html="language['part_1']['sponsor_wait']"></p>
+                <p class="tip" v-html="language['part_1']['sponsor_info']"></p> 
+                <img src="./images/close.png" alt="" class="close" onclick="$('.frame2').hide();">
+            </div>
+        </div>
+
+
+        <div class="frame" style="display: none;"  id='frame_success'>
+            <div class="black"></div>
+            <div class="content" style="background:  #548E54;">
+                <div class="info">{{language['success']}}</div>
+                 
+            </div>
+        </div>
+        <div class="frame" style="display: none;"  id='frame_error'>
+            <div class="black"></div>
+            <div class="content" style="background:indianred;color:white">
+                <div class="info">{{data.errorstr}}</div>
+
+            </div>
+        </div>
+        <div id="frame_info" style="display: none;">
+            <div class="black"></div>
+            <div class="content">
+                <img src="./images/close2.png" alt="" class="close" onclick="$('#frame_info').hide();">
+                <div class="title"></div>
+                <div class="detail"></div>
+            </div>
+        </div>
+
+        <div id="frame_info_top5_1" style="display: none;" class="frame_info_top5">
+            <div class="black"></div>
+            <div class="content">
+                <img src="./images/close2.png" alt="" class="close" onclick="$('#frame_info_top5_1').hide();">
+                <div class="title">TOP5</div>
+                <ul class="detail">
+                    <li v-for="(item, index) in data.top5_1"> <span>{{item[0]}}</span><span>{{item[1]}}</span> </li>
+                </ul>
+            </div>
+        </div>
+        <div id="frame_info_top5_7" style="display: none;" class="frame_info_top5">
+            <div class="black"></div>
+            <div class="content">
+                <img src="./images/close2.png" alt="" class="close" onclick="$('#frame_info_top5_7').hide();">
+                <div class="title">TOP5</div>
+                <ul class="detail">
+                    <li v-for="(item, index) in data.top5_7"> <span>{{item[0]}}</span><span>{{item[1]}}</span> </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
