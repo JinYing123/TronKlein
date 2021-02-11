@@ -307,6 +307,7 @@ contract Klein {
         players[msg.sender].released_amount-=draw_amount;
         total_balance-=draw_amount*93/100;
         insure_balance+=draw_amount*3/100;
+        insure_address.transfer(draw_amount*3/100);
         //clean static accountv
         return release_award(msg.sender);
     }
