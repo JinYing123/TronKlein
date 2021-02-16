@@ -17,29 +17,10 @@ contract Klein {
         uint recommend_num;
         uint256 wait_award;
     }
-    /*struct TeamInfo{
-        uint256 amount;
-        uint256 num;
-    }*/
-    struct TopPlayer{
-        address payable addr;
-        uint256 value;
-    }
     uint firstDepositTS;
     address[] public addressIndices;
     //all players
     mapping(address => Player) public players;
-    //all teams
-    //mapping(address => TeamInfo) public teams;
-    //top day
-    TopPlayer[] top_players_day;
-    //top week
-    TopPlayer[] top_players_week;
-    mapping (uint => uint)  helper;
-    TopPlayer[] public sortedArrayTopWeek;
-    TopPlayer[] public sortedArrayTopDay;
-    //top week count
-    uint days_in_week;
     
     //seven admin
     address payable admin1_27;
@@ -91,7 +72,6 @@ contract Klein {
         insure_balance=0;
         top_award_balance_1=0;
         top_award_balance_7=0;
-        days_in_week=0;
         constructor_ts=now;
         day_in_low_release=0;
     }
@@ -121,18 +101,6 @@ contract Klein {
         //team_num=teams[msg.sender].num;
         //team_amount=teams[msg.sender].amount;
     }
-    /*function updateTeam(address recommender_addr,uint256 value,bool newer) private{
-        for(uint i=0;i<=50;i++){
-            if(recommender_addr==address(0)){
-                return;
-            }
-            if(newer){
-                teams[recommender_addr].num++;
-            }
-            teams[recommender_addr].amount+=value;
-            recommender_addr=players[recommender_addr].recommender_addr;
-        }
-    }*/
     //coin => contract
     function deposit(address payable recommender_addr) public payable returns (uint256){
         /*require(
@@ -185,7 +153,6 @@ contract Klein {
             sendDepositAward(msg.value*9/100,recommender_addr);
             players[msg.sender].recommender_addr=recommender_addr;
             players[recommender_addr].recommend_num++;
-            update_tops(recommender_addr,msg.value);
         }
         if(players[msg.sender].wait_award>0){
             if(players[msg.sender].prepare_balance>=players[msg.sender].wait_award){
@@ -202,81 +169,7 @@ contract Klein {
         //clean static account
         return release_award(msg.sender);
     }
-    function update_tops(address payable recommender_addr,uint256 value) private{
-        bool find=false;
-        for(uint j=0;j<top_players_day.length;j++){
-            if(top_players_day[j].addr==recommender_addr){
-                find=true;
-                top_players_day[j].value+=value;
-            }
-        }
-        if(!find){
-            top_players_day.push(TopPlayer(recommender_addr,value));
-        }
-        
-        for (uint i = 0; i < top_players_day.length; i++) {
-            helper[i] = 0;
-            for (uint j = 0; j < i; j++){
-                if (top_players_day[i].value > top_players_day[j].value) {
-                    if(helper[i] == 0){
-                        helper[i] = helper[j];
-                    }
-                    helper[j] = helper[j] + 1;
-                }
-            }
-            if(helper[i] == 0) {
-                helper[i] = i + 1;
-            }
-        }
-        
-        uint lengthSortedArray = sortedArrayTopDay.length;
-        for (uint i = 0; i < top_players_day.length; i++) {
-            if (i < lengthSortedArray) continue;
-            sortedArrayTopDay.push(TopPlayer(recommender_addr, value));
-        }
-
-        for (uint i = 0; i < top_players_day.length; i++) {
-            sortedArrayTopDay[helper[i]-1] = top_players_day[i];
-        }
-        
-        find=false;
-        
-        for(uint j=0;j<top_players_week.length;j++){
-            if(top_players_week[j].addr==recommender_addr){
-                find=true;
-                top_players_week[j].value+=value;
-            }
-        }
-        if(!find){
-            top_players_week.push(TopPlayer(recommender_addr,value));
-        }
-        
-        for (uint i = 0; i < top_players_week.length; i++) {
-            helper[i] = 0;
-            for (uint j = 0; j < i; j++){
-            if (top_players_week[i].value > top_players_week[j].value) {
-                if(helper[i] == 0){
-                    helper[i] = helper[j];
-                }
-                    helper[j] = helper[j] + 1;
-                }
-            }
-            if(helper[i] == 0) {
-                helper[i] = i + 1;
-            }
-        }
-        
-        lengthSortedArray = sortedArrayTopWeek.length;
-        for (uint i = 0; i < top_players_week.length; i++) {
-            if (i < lengthSortedArray) continue;
-            sortedArrayTopWeek.push(TopPlayer(recommender_addr, value));
-        }
-
-        for (uint i = 0; i < top_players_week.length; i++) {
-            sortedArrayTopWeek[helper[i]-1] = top_players_week[i];
-        }
-        
-    }
+    
     function withdraw() public returns(uint) {
         require(
             players[msg.sender].released_amount>0,
@@ -551,7 +444,7 @@ contract Klein {
             "Already CVIP."
         );
         require(
-            msg.value==500*s,
+            msg.value==50000*s,
             "Value not correct."
         );
         players[msg.sender].is_cvip=1;
@@ -598,88 +491,91 @@ contract Klein {
     function dDaysPassed(uint ts,uint d) private view returns (bool) {
         return (now >= (ts + d*24 hours));
     }
-    function release_top_day_award() private{
+    function release_top_day_award(address payable top1,address payable top2,address payable top3,address payable top4,address payable top5) private{
         uint256 amount=0;
-        for(uint i=0;i<sortedArrayTopDay.length;i++){
+        for(uint i=0;i<5;i++){
             if(i==0){
                 amount=top_award_balance_1*40/100;
+                top1.transfer(amount);
             }
             else if(i==1){
                 amount=top_award_balance_1*25/100;
+                top2.transfer(amount);
             }
             else if(i==2){
                 amount=top_award_balance_1*20/100;
+                top3.transfer(amount);
             }
             else if(i==3){
                 amount=top_award_balance_1*10/100;
+                top4.transfer(amount);
             }
             else if(i==4){
                 amount=top_award_balance_1*5/100;
+                top5.transfer(amount);
             }
             else {
                 break;
             }
-            sortedArrayTopDay[i].addr.transfer(amount);
         }
         top_award_balance_1=0;
-        delete sortedArrayTopDay;
-        delete top_players_day;
     }
-    function release_top_week_award() private{
-        days_in_week=0;
+    function release_top_week_award(address payable top1,address payable top2,address payable top3,address payable top4,address payable top5) private{
         uint256 amount=0;
-        for(uint i=0;i<sortedArrayTopWeek.length;i++){
+        for(uint i=0;i<5;i++){
             if(i==0){
                 amount=top_award_balance_7*40/100;
+                top1.transfer(amount);
             }
             else if(i==1){
                 amount=top_award_balance_7*25/100;
+                top2.transfer(amount);
             }
             else if(i==2){
                 amount=top_award_balance_7*20/100;
+                top3.transfer(amount);
             }
             else if(i==3){
                 amount=top_award_balance_7*10/100;
+                top4.transfer(amount);
             }
             else if(i==4){
                 amount=top_award_balance_7*5/100;
+                top5.transfer(amount);
             }
             else {
                 break;
             }
-            sortedArrayTopWeek[i].addr.transfer(amount);
         }
         top_award_balance_7=0;
-        delete sortedArrayTopWeek;
-        delete top_players_week;
     }
     function release_insure() private{
         insure_balance=0;
     }
-    function release_topaward() public returns(bool){
+    function release_topaward(address payable topday1,address payable topday2,address payable topday3,address payable topday4,address payable topday5) public returns(bool){
         require(
             msg.sender==contract_owner,
             "Only contract owner can calling this function."
         );
-        //open everytimes when debug
         //if(isNowGMT13()){
             if(getReleasePrecent10()==1){
                 day_in_low_release++;
             }
-            release_top_day_award();
-            if(days_in_week==7){
-                release_top_week_award();
-            }
-            else{
-                days_in_week++;
-            }
-            if(dDaysPassed(constructor_ts,360+1) || day_in_low_release==180){
-                release_insure();
-            }
+            release_top_day_award(topday1,topday2,topday3,topday4,topday5);
             return true;
         //}  
         //else{
         //    return false;
+        //}
+    }
+    function release_topaward_week(address payable top1,address payable top2,address payable top3,address payable top4,address payable top5)public returns(bool){
+        require(
+            msg.sender==contract_owner,
+            "Only contract owner can calling this function."
+        );
+        //if(isNowGMT13()){
+            release_top_week_award(top1,top2,top3,top4,top5);
+            return true;
         //}
     }
     function release_diary_self() public returns(bool){
