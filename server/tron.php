@@ -19,7 +19,16 @@ $action=$argv[1];
 if($action=='cache'){
 	save_nets();
 }
-else if($action=='top'){
-	release_topaward();
+else if($action=='cache_top'){
+    save_top5();
 }
-
+else if($action=='top'){
+    if (date("w")==1){
+        $starttime = strtotime(date("Y-m-d",strtotime("-1 week")));//last week
+        $endtime = $starttime+24 * 60 * 60 * 7-1;
+        release_top5($starttime,$endtime,'release_top_week_award');
+    }
+    $starttime = strtotime(date("Y-m-d",strtotime("-1 day")));//yestoday
+    $endtime = $starttime+24 * 60 * 60-1;//yestoday 23:59:59
+    release_top5($starttime,$endtime,'release_top_day_award');
+}

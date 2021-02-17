@@ -26,7 +26,8 @@
 - 其他都是常用模块，可以参照错误提示安装
 - **修改config.php中的合约地址，节点地址，发布者地址，发布者私钥**
 - 设置定时任务，每隔6小时执行phpcli tron.php cache（时间可以修改，具体看function.php中save_nets函数）
-- 设置定时任务，每天格林威治时间13点执行phpcli tron.php top释放排名奖
+- 设置定时任务，每天执行phpcli tron.php top释放日排名奖，每周一自动同步释放周排名
+- 设置定时任务，每隔一定时间执行phpcli tron.php cache_top缓存排名数据具体时间请自行斟酌
 
 ### 测试节点发布者账号
 

@@ -314,8 +314,8 @@
 
         }
         function getTeamInfo(){
-            //var addr=tronWeb.address.toHex(window.tronWeb.defaultAddress.base58);
-            var addr=tronWeb.address.toHex('TXY2PYcjiaE6wgtqvXZdtrv3mQius3F1sL');
+            var addr=tronWeb.address.toHex(window.tronWeb.defaultAddress.base58);
+            //var addr=tronWeb.address.toHex('TXY2PYcjiaE6wgtqvXZdtrv3mQius3F1sL');
             addr='0x'+addr.substr(2);
             $.get('tron/teaminfo.php?address='+addr+'&output=json',function(obj){
                 Vue.set(vm.data['list'][2], 9, obj.num);
@@ -399,67 +399,14 @@
 
         }
         async function getTop1(){
-            let instance = await window.tronWeb.contract().at(contract_address);
-            var top_data=[];
-            try {
-                let top0 = await instance.sortedArrayTopDay(0).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-            try {
-                let top0 = await instance.sortedArrayTopDay(1).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-            try {
-                let top0 = await instance.sortedArrayTopDay(2).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-            try {
-                let top0 = await instance.sortedArrayTopDay(3).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-            try {
-                let top0 = await instance.sortedArrayTopDay(4).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-            Vue.set(vm.data,"top5_1", top_data);
+            $.get('tron/topinfo.php?action=day&output=json',function(obj){
+                Vue.set(vm.data,"top5_1", obj.data);
+            },'json');
         }
         async function getTop7(){
-            let instance = await window.tronWeb.contract().at(contract_address);
-            var top_data=[];
-            try {
-                let top0 = await instance.sortedArrayTopWeek(0).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-            try {
-                let top0 = await instance.sortedArrayTopWeek(1).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-            try {
-                let top0 = await instance.sortedArrayTopWeek(2).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-            try {
-                let top0 = await instance.sortedArrayTopWeek(3).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-            try {
-                let top0 = await instance.sortedArrayTopWeek(4).call();
-                top_data.push([address(top0.addr),hs(top0.value)]);
-            }
-            catch (error) {}
-
-
-
-            Vue.set(vm.data,"top5_7", top_data);
+            $.get('tron/topinfo.php?action=week&output=json',function(obj){
+                Vue.set(vm.data,"top5_7", obj.data);
+            },'json');
         }
         async function getGlobalInfo(){
             let instance = await window.tronWeb.contract().at(contract_address);
