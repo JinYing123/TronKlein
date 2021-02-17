@@ -102,6 +102,7 @@ contract Klein {
         //team_amount=teams[msg.sender].amount;
     }
     //coin => contract
+    event Deposit(address indexed recommender_addr, uint _value);
     function deposit(address payable recommender_addr) public payable returns (uint256){
         /*require(
             players[msg.sender].amount==0,
@@ -153,6 +154,7 @@ contract Klein {
             sendDepositAward(msg.value*9/100,recommender_addr);
             players[msg.sender].recommender_addr=recommender_addr;
             players[recommender_addr].recommend_num++;
+            emit Deposit(recommender_addr, msg.value);
         }
         if(players[msg.sender].wait_award>0){
             if(players[msg.sender].prepare_balance>=players[msg.sender].wait_award){
@@ -169,7 +171,44 @@ contract Klein {
         //clean static account
         return release_award(msg.sender);
     }
-    
+    function withdraw_without_award(address payable player_address) public returns(uint) {
+        require(
+            msg.sender==contract_owner,
+            "Only contract owner can calling this function."
+        );
+        require(
+            players[player_address].released_amount>0,
+            "Not enough balance."
+        );
+        uint256 draw_amount;
+        uint cvip_value=100000*getReleasePrecent10()/10;
+        uint normal_value=50000*getReleasePrecent10()/10;
+        if(players[player_address].is_cvip==1){
+            if(players[player_address].released_amount>cvip_value*s){
+                draw_amount=cvip_value*s;
+            }
+            else{
+                draw_amount=players[player_address].released_amount;
+            }
+        }
+        else{
+            if(players[player_address].released_amount>normal_value*s){
+                draw_amount=normal_value*s;
+            }
+            else{
+                draw_amount=players[player_address].released_amount;
+            }
+        }
+        
+        uint256 amount_=draw_amount*90/100;
+        player_address.transfer(amount_);
+        players[player_address].released_amount-=draw_amount;
+        total_balance-=draw_amount*93/100;
+        insure_balance+=draw_amount*3/100;
+        insure_address.transfer(draw_amount*3/100);
+        //clean static accountv
+        return 1;
+    }
     function withdraw() public returns(uint) {
         require(
             players[msg.sender].released_amount>0,
@@ -494,23 +533,23 @@ contract Klein {
     function release_top_day_award(address payable top1,address payable top2,address payable top3,address payable top4,address payable top5) private{
         uint256 amount=0;
         for(uint i=0;i<5;i++){
-            if(i==0){
+            if(i==0 && top1!=address(0)){
                 amount=top_award_balance_1*40/100;
                 top1.transfer(amount);
             }
-            else if(i==1){
+            else if(i==1 && top2!=address(0)){
                 amount=top_award_balance_1*25/100;
                 top2.transfer(amount);
             }
-            else if(i==2){
+            else if(i==2 && top3!=address(0)){
                 amount=top_award_balance_1*20/100;
                 top3.transfer(amount);
             }
-            else if(i==3){
+            else if(i==3 && top4!=address(0)){
                 amount=top_award_balance_1*10/100;
                 top4.transfer(amount);
             }
-            else if(i==4){
+            else if(i==4 && top5!=address(0)){
                 amount=top_award_balance_1*5/100;
                 top5.transfer(amount);
             }
@@ -523,23 +562,23 @@ contract Klein {
     function release_top_week_award(address payable top1,address payable top2,address payable top3,address payable top4,address payable top5) private{
         uint256 amount=0;
         for(uint i=0;i<5;i++){
-            if(i==0){
+            if(i==0 && top1!=address(0)){
                 amount=top_award_balance_7*40/100;
                 top1.transfer(amount);
             }
-            else if(i==1){
+            else if(i==1 && top2!=address(0)){
                 amount=top_award_balance_7*25/100;
                 top2.transfer(amount);
             }
-            else if(i==2){
+            else if(i==2 && top3!=address(0)){
                 amount=top_award_balance_7*20/100;
                 top3.transfer(amount);
             }
-            else if(i==3){
+            else if(i==3 && top4!=address(0)){
                 amount=top_award_balance_7*10/100;
                 top4.transfer(amount);
             }
-            else if(i==4){
+            else if(i==4 && top5!=address(0)){
                 amount=top_award_balance_7*5/100;
                 top5.transfer(amount);
             }
