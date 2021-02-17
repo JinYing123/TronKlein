@@ -52,6 +52,25 @@ $abi='[
 		"type": "constructor"
 	},
 	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "recommender_addr",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_value",
+				"type": "uint256"
+			}
+		],
+		"name": "Deposit",
+		"type": "event"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -357,7 +376,33 @@ $abi='[
 		"type": "function"
 	},
 	{
-		"inputs": [],
+		"inputs": [
+			{
+				"internalType": "address payable",
+				"name": "topday1",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "topday2",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "topday3",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "topday4",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "topday5",
+				"type": "address"
+			}
+		],
 		"name": "release_topaward",
 		"outputs": [
 			{
@@ -372,54 +417,64 @@ $abi='[
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "sortedArrayTopDay",
-		"outputs": [
-			{
 				"internalType": "address payable",
-				"name": "addr",
+				"name": "top1",
 				"type": "address"
 			},
 			{
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "sortedArrayTopWeek",
-		"outputs": [
-			{
 				"internalType": "address payable",
-				"name": "addr",
+				"name": "top2",
 				"type": "address"
 			},
 			{
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
+				"internalType": "address payable",
+				"name": "top3",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "top4",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "top5",
+				"type": "address"
 			}
 		],
-		"stateMutability": "view",
+		"name": "release_topaward_week",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"inputs": [],
 		"name": "withdraw",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address payable",
+				"name": "player_address",
+				"type": "address"
+			}
+		],
+		"name": "withdraw_without_award",
 		"outputs": [
 			{
 				"internalType": "uint256",

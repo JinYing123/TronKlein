@@ -377,7 +377,7 @@
             //console.log(tp.isConnected());
             try {
                 let contract = await window.tronWeb.contract().at(contract_address);
-                var val=500;
+                var val=50000;
                 let result = await contract.cvip().send({
                     callValue:window.tronWeb.toSun(val),
                     shouldPollResponse:true,
